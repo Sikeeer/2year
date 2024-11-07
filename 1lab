@@ -1,0 +1,85 @@
+#include <iostream>
+#include <string>
+
+class Time {
+private:
+    int hours;   // 0-23
+    int minutes; // 0-59
+    int seconds; // 0-59
+
+    // Проверка корректности времени
+    bool isValidTime(int h, int m, int s) {
+        return (h >= 0 && h <= 23) &&
+               (m >= 0 && m <= 59) &&
+               (s >= 0 && s <= 59);
+    }
+
+public:
+    // Конструктор по умолчанию
+    Time() : hours(0), minutes(0), seconds(0) {}
+
+    // Конструктор с параметрами
+    Time(int h, int m, int s) {
+        setTime(h, m, s);
+    }
+
+    // Функция установки времени
+    void setTime(int h, int m, int s) {
+        if (isValidTime(h, m, s)) {
+            hours = h;
+            minutes = m;
+            seconds = s;
+        } else {
+            std::cerr << "Некорректное время!\n";
+            hours = minutes = seconds = 0;
+        }
+    }
+
+    // Функции получения часов, минут и секунд
+    int getHours() const {
+        return hours;
+    }
+
+    int getMinutes() const {
+        return minutes;
+    }
+
+    int getSeconds() const {
+        return seconds;
+    }
+
+    // Функция отображения: «час 17 и 18 минут и 4 секунды»
+    void display24HourFormat() const {
+        std::cout << "час " << hours << " и " << minutes
+                  << " минут и " << seconds << " секунды\n";
+    }
+
+    // Функция отображения: «5 p.m. 18 минут 4 секунды»
+    void display12HourFormat() const {
+        int displayHours = hours % 12;
+        if (displayHours == 0)
+            displayHours = 12;
+
+        std::string period = (hours >= 12) ? "p.m." : "a.m.";
+        std::cout << displayHours << " " << period << " "
+                  << minutes << " минут " << seconds << " секунды\n";
+    }
+};
+
+int main() {
+    Time t1;
+    t1.setTime(17, 18, 4);
+    t1.display24HourFormat();  // час 17 и 18 минут и 4 секунды
+    t1.display12HourFormat();  // 5 p.m. 18 минут 4 секунды
+
+    Time t2(23, 59, 59);
+    t2.display24HourFormat();  // час 23 и 59 минут и 59 секунды
+    t2.display12HourFormat();  // 11 p.m. 59 минут 59 секунды
+
+    // Попытка установить некорректное время
+    Time t3;
+    t3.setTime(25, 61, -5);    // Некорректное время!
+    t3.display24HourFormat();  // час 0 и 0 минут и 0 секунды
+
+    return 0;
+}
