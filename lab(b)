@@ -1,0 +1,234 @@
+#include <iostream>
+#include <iomanip>
+
+class Matrix {
+private:
+    double* data;
+    int rows;
+    int cols;
+    int errorCode; // 0 - нет ошибок, 1 - недостаточно памяти, 2 - несоответствие размеров и т.д.
+
+    // Проверка индексов
+    bool isValidIndex(int i, int j) const {
+        return (i >= 0 && i < rows) && (j >= 0 && j < cols);
+    }
+
+public:
+    // Конструктор по умолчанию
+    Matrix() : data(nullptr), rows(0), cols(0), errorCode(0) {}
+
+    // Конструктор для квадратной матрицы
+    Matrix(int size) : rows(size), cols(size), errorCode(0) {
+        data = new (std::nothrow) double[rows * cols];
+        if (!data) {
+            errorCode = 1; // Недостаточно памяти
+        } else {
+            // Инициализация нулями
+            for (int i = 0; i < rows * cols; ++i) {
+                data[i] = 0.0;
+            }
+        }
+    }
+
+    // Конструктор для прямоугольной матрицы
+    Matrix(int r, int c) : rows(r), cols(c), errorCode(0) {
+        data = new (std::nothrow) double[rows * cols];
+        if (!data) {
+            errorCode = 1; // Недостаточно памяти
+        } else {
+            for (int i = 0; i < rows * cols; ++i) {
+                data[i] = 0.0;
+            }
+        }
+    }
+
+    // Деструктор
+    ~Matrix() {
+        delete[] data;
+    }
+
+    // Получение кода ошибки
+    int getErrorCode() const {
+        return errorCode;
+    }
+
+    // Установка значения элемента
+    void setElement(int i, int j, double value) {
+        if (isValidIndex(i, j)) {
+            data[i * cols + j] = value;
+        } else {
+            errorCode = 2; // Индекс вне диапазона
+        }
+    }
+
+    // Получение значения элемента
+    double getElement(int i, int j) const {
+        if (isValidIndex(i, j)) {
+            return data[i * cols + j];
+        } else {
+            // Можно выбросить исключение или вернуть специальное значение
+            return 0.0;
+        }
+    }
+
+    // Функция сложения матриц
+    Matrix add(const Matrix& other) const {
+        if (rows != other.rows || cols != other.cols) {
+            Matrix result;
+            result.errorCode = 2; // Несоответствие размеров
+            return result;
+        }
+
+        Matrix result(rows, cols);
+        if (result.errorCode != 0) {
+            return result; // Недостаточно памяти
+        }
+
+        for (int i = 0; i < rows * cols; ++i) {
+            result.data[i] = data[i] + other.data[i];
+        }
+        return result;
+    }
+
+    // Функция вычитания матриц
+    Matrix subtract(const Matrix& other) const {
+        if (rows != other.rows || cols != other.cols) {
+            Matrix result;
+            result.errorCode = 2; // Несоответствие размеров
+            return result;
+        }
+
+        Matrix result(rows, cols);
+        if (result.errorCode != 0) {
+            return result; // Недостаточно памяти
+        }
+
+        for (int i = 0; i < rows * cols; ++i) {
+            result.data[i] = data[i] - other.data[i];
+        }
+        return result;
+    }
+
+    // Функция умножения матрицы на число
+    Matrix multiply(double scalar) const {
+        Matrix result(rows, cols);
+        if (result.errorCode != 0) {
+            return result; // Недостаточно памяти
+        }
+
+        for (int i = 0; i < rows * cols; ++i) {
+            result.data[i] = data[i] * scalar;
+        }
+        return result;
+    }
+
+    // Функция умножения матриц
+    Matrix multiply(const Matrix& other) const {
+        if (cols != other.rows) {
+            Matrix result;
+            result.errorCode = 2; // Несоответствие размеров
+            return result;
+        }
+
+        Matrix result(rows, other.cols);
+        if (result.errorCode != 0) {
+            return result; // Недостаточно памяти
+        }
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < other.cols; ++j) {
+                double sum = 0.0;
+                for (int k = 0; k < cols; ++k) {
+                    sum += getElement(i, k) * other.getElement(k, j);
+                }
+                result.setElement(i, j, sum);
+            }
+        }
+        return result;
+    }
+
+    // Функция отображения матрицы
+    void display() const {
+        if (errorCode != 0) {
+            std::cerr << "Невозможно отобразить матрицу. Код ошибки: " << errorCode << "\n";
+            return;
+        }
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                std::cout << std::setw(8) << getElement(i, j) << " ";
+            }
+            std::cout << "\n";
+        }
+    }
+};
+
+int main() {
+    // Тестирование конструктора по умолчанию
+    Matrix m1;
+    if (m1.getErrorCode() != 0) {
+        std::cerr << "Ошибка при создании матрицы m1. Код ошибки: " << m1.getErrorCode() << "\n";
+    }
+
+    // Создание квадратной матрицы 3x3
+    Matrix m2(3);
+    if (m2.getErrorCode() != 0) {
+        std::cerr << "Ошибка при создании матрицы m2. Код ошибки: " << m2.getErrorCode() << "\n";
+        return 1;
+    }
+
+    // Заполнение матрицы m2
+    m2.setElement(0, 0, 1.0);
+    m2.setElement(1, 1, 2.0);
+    m2.setElement(2, 2, 3.0);
+
+    // Создание прямоугольной матрицы 3x2
+    Matrix m3(3, 2);
+    if (m3.getErrorCode() != 0) {
+        std::cerr << "Ошибка при создании матрицы m3. Код ошибки: " << m3.getErrorCode() << "\n";
+        return 1;
+    }
+
+    // Заполнение матрицы m3
+    m3.setElement(0, 0, 4.0);
+    m3.setElement(1, 1, 5.0);
+
+    // Отображение матриц
+    std::cout << "Матрица m2:\n";
+    m2.display();
+
+    std::cout << "\nМатрица m3:\n";
+    m3.display();
+
+    // Попытка сложения m2 и m3 (несоответствие размеров)
+    Matrix m4 = m2.add(m3);
+    if (m4.getErrorCode() == 2) {
+        std::cerr << "Невозможно сложить матрицы: несоответствие размеров.\n";
+    }
+
+    // Умножение матрицы на число
+    Matrix m5 = m2.multiply(2.0);
+    std::cout << "\nМатрица m2 умноженная на 2:\n";
+    m5.display();
+
+    // Умножение матрицы m2 на m3 (несоответствие размеров для умножения)
+    Matrix m6 = m2.multiply(m3);
+    if (m6.getErrorCode() == 2) {
+        std::cerr << "Невозможно умножить матрицы: несоответствие размеров.\n";
+    }
+
+    // Создание матрицы для корректного умножения
+    Matrix m7(2, 3);
+    m7.setElement(0, 0, 1.0);
+    m7.setElement(0, 1, 2.0);
+    m7.setElement(0, 2, 3.0);
+    m7.setElement(1, 0, 4.0);
+    m7.setElement(1, 1, 5.0);
+    m7.setElement(1, 2, 6.0);
+
+    Matrix m8 = m3.multiply(m7);
+    std::cout << "\nРезультат умножения m3 на m7:\n";
+    m8.display();
+
+    return 0;
+}
