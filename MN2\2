@@ -1,0 +1,102 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+
+const int MAX_N = 100; // Максимальный размер системы
+
+// Разложение Холецкого: A = L * L^T
+bool choleskyDecomposition(const vector<vector<double>>& A, vector<vector<double>>& L, int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j <= i; j++) {
+            double sum = 0;
+
+            if (j == i) { // Диагональные элементы
+                for (int k = 0; k < j; k++) {
+                    sum += L[j][k] * L[j][k];
+                }
+                if (A[j][j] - sum <= 0) {
+                    cout << "Матрица не является положительно определенной." << endl;
+                    return false;
+                }
+                L[j][j] = sqrt(A[j][j] - sum);
+            } else { // Вне диагонали
+                for (int k = 0; k < j; k++) {
+                    sum += L[i][k] * L[j][k];
+                }
+                L[i][j] = (A[i][j] - sum) / L[j][j];
+            }
+        }
+    }
+    return true;
+}
+
+// Решение системы L * y = b
+vector<double> forwardSubstitution(const vector<vector<double>>& L, const vector<double>& b, int n) {
+    vector<double> y(n);
+    for (int i = 0; i < n; i++) {
+        double sum = 0;
+        for (int j = 0; j < i; j++) {
+            sum += L[i][j] * y[j];
+        }
+        y[i] = (b[i] - sum) / L[i][i];
+    }
+    return y;
+}
+
+// Решение системы L^T * x = y
+vector<double> backwardSubstitution(const vector<vector<double>>& L, const vector<double>& y, int n) {
+    vector<double> x(n);
+    for (int i = n - 1; i >= 0; i--) {
+        double sum = 0;
+        for (int j = i + 1; j < n; j++) {
+            sum += L[j][i] * x[j];
+        }
+        x[i] = (y[i] - sum) / L[i][i];
+    }
+    return x;
+}
+
+int main() {
+    int n;
+    cout << "Введите размер системы (n): ";
+    cin >> n;
+
+    vector<vector<double>> A(n, vector<double>(n));
+    vector<double> b(n);
+
+    cout << "Введите элементы матрицы A (симметричная):" << endl;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cin >> A[i][j];
+        }
+    }
+
+    cout << "Введите элементы вектора b:" << endl;
+    for (int i = 0; i < n; i++) {
+        cin >> b[i];
+    }
+
+    vector<vector<double>> L(n, vector<double>(n, 0)); // Матрица L
+
+    // Выполняем разложение Холецкого
+    if (!choleskyDecomposition(A, L, n)) {
+        return 1; // Выход, если матрица не положительно определённая
+    }
+
+    // Решение системы L * y = b
+    vector<double> y = forwardSubstitution(L, b, n);
+
+    // Решение системы L^T * x = y
+    vector<double> x = backwardSubstitution(L, y, n);
+
+    // Вывод решения
+    cout << "Решение системы x:" << endl;
+    for (int i = 0; i < n; i++) {
+        cout << "x[" << i + 1 << "] = " << fixed << setprecision(6) << x[i] << endl;
+    }
+
+    return 0;
+}
