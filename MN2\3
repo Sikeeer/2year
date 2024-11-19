@@ -1,0 +1,160 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <iomanip>
+#include <limits>
+
+using namespace std;
+
+// Функция для проверки диагонального преобладания
+bool isDiagonallyDominant(const vector<vector<double>>& A, int n) {
+    for (int i = 0; i < n; i++) {
+        double sum = 0;
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                sum += fabs(A[i][j]);
+            }
+        }
+        if (fabs(A[i][i]) <= sum) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Метод Якоби
+void jacobiMethod(const vector<vector<double>>& A, const vector<double>& b, vector<double>& x, int n, double eps, int maxIter) {
+    vector<double> x_new(n, 0);
+    int iter = 0;
+
+    cout << "Метод Якоби:\n";
+    while (iter < maxIter) {
+        for (int i = 0; i < n; i++) {
+            double sum = 0;
+            for (int j = 0; j < n; j++) {
+                if (j != i) {
+                    sum += A[i][j] * x[j];
+                }
+            }
+            x_new[i] = (b[i] - sum) / A[i][i];
+        }
+
+        double maxDiff = 0;
+        for (int i = 0; i < n; i++) {
+            maxDiff = max(maxDiff, fabs(x_new[i] - x[i]));
+        }
+
+        x = x_new;
+        iter++;
+
+        if (maxDiff < eps) break;
+    }
+
+    for (int i = 0; i < n; i++) {
+        cout << "x[" << i + 1 << "] = " << fixed << setprecision(6) << x[i] << endl;
+    }
+    cout << "Итераций: " << iter << endl;
+}
+
+// Метод Гаусса-Зейделя
+void gaussSeidelMethod(const vector<vector<double>>& A, const vector<double>& b, vector<double>& x, int n, double eps, int maxIter) {
+    vector<double> x_new(n, 0);
+    int iter = 0;
+
+    cout << "\nМетод Гаусса-Зейделя:\n";
+    while (iter < maxIter) {
+        double maxDiff = 0;
+        for (int i = 0; i < n; i++) {
+            double sum = 0;
+            for (int j = 0; j < n; j++) {
+                if (j != i) {
+                    sum += A[i][j] * x[j];
+                }
+            }
+            double newValue = (b[i] - sum) / A[i][i];
+            maxDiff = max(maxDiff, fabs(newValue - x[i]));
+            x[i] = newValue;
+        }
+
+        iter++;
+        if (maxDiff < eps) break;
+    }
+
+    for (int i = 0; i < n; i++) {
+        cout << "x[" << i + 1 << "] = " << fixed << setprecision(6) << x[i] << endl;
+    }
+    cout << "Итераций: " << iter << endl;
+}
+
+int main() {
+    int n;
+    cout << "Введите размер системы (n): ";
+    cin >> n;
+
+    // Очистка буфера после ввода
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    vector<vector<double>> A(n, vector<double>(n));
+    vector<double> b(n);
+    vector<double> x(n, 0); // Начальное приближение
+
+    cout << "Введите элементы матрицы A:" << endl;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cin >> A[i][j];
+        }
+    }
+
+    // Очистка буфера после ввода матрицы
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    cout << "Введите элементы вектора b:" << endl;
+    for (int i = 0; i < n; i++) {
+        cin >> b[i];
+    }
+
+    // Очистка буфера после ввода вектора
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    double eps;
+    cout << "Введите точность eps: ";
+    cin >> eps;
+
+    // Очистка буфера после ввода точности
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    // Проверка корректного ввода точности
+    if (cin.fail() || eps <= 0) {
+        cout << "Ошибка ввода. Используется значение точности по умолчанию: 0.001\n";
+        eps = 0.001;
+    }
+
+    int maxIter;
+    cout << "Введите максимальное количество итераций: ";
+    cin >> maxIter;
+
+    // Очистка буфера после ввода итераций
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    // Проверка корректного ввода максимального количества итераций
+    if (cin.fail() || maxIter <= 0) {
+        cout << "Ошибка ввода. Используется значение по умолчанию: 100\n";
+        maxIter = 100;
+    }
+
+    // Проверка диагонального преобладания
+    if (!isDiagonallyDominant(A, n)) {
+        cout << "Матрица не имеет диагонального преобладания. Результаты могут быть некорректными.\n";
+    }
+
+    // Метод Якоби
+    jacobiMethod(A, b, x, n, eps, maxIter);
+
+    // Сброс начального приближения
+    fill(x.begin(), x.end(), 0);
+
+    // Метод Гаусса-Зейделя
+    gaussSeidelMethod(A, b, x, n, eps, maxIter);
+
+    return 0;
+}
