@@ -1,0 +1,76 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+// Определение максимального размера системы уравнений
+const int MAX_N = 100;
+int N; // Глобальная переменная - размер системы
+
+// Функция для реализации метода Гаусса
+void Gauss(float A[MAX_N + 1][MAX_N + 2], float x[MAX_N + 1]) {
+    int i, j, k, ved_str; // i, j, k - индексы, ved_str - ведущая строка
+    float temp, t;        // Вспомогательные переменные
+
+    // Прямой ход
+    for (i = 1; i <= N - 1; i++) {
+        ved_str = i;
+        // Поиск ведущей строки
+        for (j = i + 1; j <= N; j++) {
+            if (fabs(A[j][i]) > fabs(A[ved_str][i])) ved_str = j;
+        }
+
+        // Перестановка строк
+        for (k = i; k <= N + 1; k++) {
+            t = A[i][k];
+            A[i][k] = A[ved_str][k];
+            A[ved_str][k] = t;
+        }
+
+        // Преобразование системы
+        for (j = i + 1; j <= N; j++) {
+            temp = A[j][i] / A[i][i];
+            for (k = i; k <= N + 1; k++) {
+                A[j][k] = A[j][k] - A[i][k] * temp;
+            }
+        }
+    }
+
+    // Обратный ход
+    x[N] = A[N][N + 1] / A[N][N];
+    for (i = N - 1; i >= 1; i--) {
+        t = 0;
+        for (k = N; k > i; k--) {
+            t += A[i][k] * x[k];
+        }
+        x[i] = (A[i][N + 1] - t) / A[i][i];
+    }
+}
+
+int main() {
+    float A[MAX_N + 1][MAX_N + 2]; // Матрица системы
+    float x[MAX_N + 1];           // Решение системы
+
+    // Ввод размера системы
+    cout << "Введите размер системы N: ";
+    cin >> N;
+
+    // Ввод матрицы системы
+    cout << "Введите матрицу коэффициентов и вектор правых частей:" << endl;
+    for (int i = 1; i <= N; i++) {
+        for (int j = 1; j <= N + 1; j++) {
+            cin >> A[i][j];
+        }
+    }
+
+    // Вызов метода Гаусса
+    Gauss(A, x);
+
+    // Вывод решения
+    cout << "Решение системы:" << endl;
+    for (int i = 1; i <= N; i++) {
+        cout << "x[" << i << "] = " << x[i] << endl;
+    }
+
+    return 0;
+}
